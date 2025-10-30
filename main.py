@@ -9,9 +9,9 @@ def calc_mean(reader, year) :
     total = 0
     year_num = 0
 
-    for row in reader:
+    for row in reader :
         if int(row[0]) == year :
-            total += int(row[1])
+            total += float(row[1])
             year_num += 1
 
     if year_num > 0 :
@@ -19,7 +19,15 @@ def calc_mean(reader, year) :
     else :
         return 0
 
+def plot_mean(reader) :
+    for i in years :
+        f.seek(0)
+        next(reader)
+        average = truncate(calc_mean(reader, i), 2)
+        ## print(f"The average house price in {i} was ${average}")
+
+
+
 with open("Sales_01_20.csv", newline="") as f :
-    reader = csv.reader(f)
-    next(reader)    ## skip the first line in the csv
-    average = truncate(calc_mean(reader), 2)
+    reader = csv.reader(f)   ## skip the first line in the csv
+    plot_mean(reader)
