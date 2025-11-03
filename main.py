@@ -1,33 +1,81 @@
-import csv, matplotlib.pyplot as plt
+import csv, statistics, matplotlib.pyplot as plt
 
-years = (2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020)
+years = range(2001, 2021)
 
 def truncate(num, n):                 ## truncate to n decimal places
     return int(num * 10 ** n) / 10 ** n
 
-def calc_mean(reader, year) :
-    total = 0
-    year_num = 0
-
-    for row in reader :
-        if int(row[0]) == year :
-            total += float(row[1])
-            year_num += 1
-
-    if year_num > 0 :
-        return total / year_num
-    else :
+def calc_probabability(data, year, low=200000, high=300000) :
+    prices = [float(row[1]) for row in data if int(row[0]) == year]
+    if not prices :
         return 0
 
-def plot_mean(reader) :
-    for i in years :
-        f.seek(0)
-        next(reader)
-        average = truncate(calc_mean(reader, i), 2)
-        ## print(f"The average house price in {i} was ${average}")
+    count_in_range = sum(1 for p in prices if low <= p <= high)
+    probability =  count_in_range / len(prices)
+    return round(probability, 3)
 
+def plot_probability(data) :
+    probs = []
+    for i in years :
+        p = calc_probabability(data, i)
+        probs.append(p)
+        print(f"{i}: Probability = {p: .3f}")
+
+    plt.figure(figsize=(10, 5))
+    plt.bar(years, probs, color="mediumseagreen", edgecolor="black")
+    plt.xlabel("Year")
+    plt.ylabel("Probability")
+    plt.title("Probability of Sale Prices from $200k–$300k by Year (2001–2020)")
+    plt.xticks(list(years))
+    plt.ylim(0, 1)  # since probability maxes at 1
+    plt.tight_layout()
+    plt.show()
+
+def calc_stats(data, year) :
+    values = [float(row[1]) for row in data if int(row[0]) == year]
+    if values :
+        mean = statistics.mean(values)
+        ##print(f"Average price of a house in {year} was ${truncate(mean, 2)}.")
+        stdev = statistics.stdev(values) if len(values) > 1 else 0
+        print(f"Standard deviation of houses in {year} was ${truncate(stdev, 2)}.")
+        return truncate(mean, 2), truncate(stdev, 2)
+    else :
+        return 0, 0
+
+def plot_stats(data) :
+    means = []
+    stdevs = []
+
+    for i in years :
+        mean, stdev = calc_stats(data, i)
+        means.append(mean)
+        stdevs.append(stdev)
+
+    ## PLOT 1: MEANS
+    plt.figure(figsize=(10,5))
+    plt.bar(years, means, color="steelblue", edgecolor="black")
+    plt.xlabel("Year")
+    plt.ylabel("Average Price ($)")
+    plt.title("Average Housing Prices by Year from 2001-2020")
+    plt.xticks(list(years))
+    plt.tight_layout()
+    plt.show()
+
+    ## PLOT 2: STANDARD DEVIATIONS
+    plt.figure(figsize=(10,5))
+    plt.bar(years, stdevs, color="steelblue", edgecolor="black")
+    plt.xlabel("Year")
+    plt.ylabel("Standard Deviations ($)")
+    plt.title("Standard Deviation of Housing Prices from the Average by Year from 2001-2020")
+    plt.xticks(list(years))
+    plt.tight_layout()
+    plt.show()
 
 
 with open("Sales_01_20.csv", newline="") as f :
     reader = csv.reader(f)   ## skip the first line in the csv
-    plot_mean(reader)
+    next(reader)
+    data = list(reader)
+
+plot_stats(data)
+plot_probability(data)
